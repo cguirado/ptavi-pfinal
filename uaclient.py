@@ -6,16 +6,39 @@ Programa cliente que abre un socket a un servidor
 
 import socket
 import sys
+from xml.sax import make_parser
+from xml.sax.handler import ContentHandler
 
 # Cliente UDP simple.
 
 #Comparar argumentos
-if len(sys.argv) != 3:
-    sys.exit("Usage: python client.py method receiver@IP:SIPport")
+if len(sys.argv) != 4:
+    sys.exit("Usage: python client.py config method opcion")
 # Dirección IP del servidor.
 SERVER = 'localhost'
-Metodo = sys.argv[1]
-Direccion = sys.argv[2]
+Config = sys.argv[2]
+Metodo = sys.argv[3]
+Opcion = sys.argv[4]
+#Extraer del XML
+class CrearDicc (ContentHandler)
+    def __init__(self):
+         self.tags = []
+         self.dicc = {"account":['username','passwd'],
+                      "uaserver":['ip', 'puerto'],
+                      "rtpaudio":['puerto'],
+                      "regproxy":['ip','puerto'],
+                      "log":['path'],
+                      "audio":['path']}
+
+    def startElement(self, name, attrs):
+        if name in self.dicc:
+            dicc2={}
+            for atributo in self.dicc[name]:
+                dicc2[atributo] = attrs.get(atributo,"")
+            self.tags.append([name,dicc2])
+
+    def get_tags(self):
+        return self.tags
 
 Separar = Direccion.split(":")
 part1 = Separar[0]
