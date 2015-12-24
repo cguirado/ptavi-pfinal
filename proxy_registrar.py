@@ -8,6 +8,41 @@ import socketserver
 import sys
 import json
 import time
+from xml.sax import make_parser
+from xml.sax.handler import ContentHandler
+#Comparar argumentos
+if len(sys.argv) != 2:
+    sys.exit("Usage: python proxy_registrar.py config")
+
+#Extraemos del xml
+class CrearDicc (ContentHandler):
+    def __init__(self):
+         self.tags = []
+         self.dicc = {"server":['name','ip','puerto'],
+                      "database":['path', 'passwdpath'],
+                      "log":['path']}
+
+#Metodo para coger los elemenos
+    def startElement(self, name, attrs):
+        if name in self.dicc:
+            dicc2={}
+            for atributo in self.dicc[name]:
+                #Guardar los atributos en mi diccionario
+                dicc2[atributo] = attrs.get(atributo,"")
+                #Añadir sin borrar
+            self.tags.append([name,dicc2])
+
+    def get_tags(self):
+        return self.tags
+
+parser = make_parser()
+chandler = CrearDicc()
+parser.setContentHandler(chandler)
+parser.parse(open(Config))
+#Aqui extraigo del xml a mi dicc
+Confxml = chandler.get_tags()
+
+
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
