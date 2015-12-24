@@ -9,6 +9,54 @@ import sys
 import os
 import os.path
 
+# Creamos servidor de eco y escuchamos
+if len(sys.argv) != 2:
+   sys.exit("Usage: python server.py config")
+fichero = sys.argv[1]
+#Extraemos del xml
+class CrearDicc (ContentHandler):
+    def __init__(self):
+         self.tags = []
+         self.dicc = {"account":['username','passwd'],
+                      "uaserver":['ip', 'puerto'],
+                      "rtpaudio":['puerto'],
+                      "regproxy":['ip','puerto'],
+                      "log":['path'],
+                      "audio":['path']}
+
+#Metodo para coger los elemenos
+    def startElement(self, name, attrs):
+        if name in self.dicc:
+            dicc2={}
+            for atributo in self.dicc[name]:
+                #Guardar los atributos en mi diccionario
+                dicc2[atributo] = attrs.get(atributo,"")
+                #Añadir sin borrar
+            self.tags.append([name,dicc2])
+
+    def get_tags(self):
+        return self.tags
+
+parser = make_parser()
+chandler = CrearDicc()
+parser.setContentHandler(chandler)
+parser.parse(open(Config))
+#Aqui extraigo del xml a mi dicc
+Confxml = chandler.get_tags()
+
+#Coger  las cosas del xml en variables (si no las necesito las borro mas tarde)
+username = Confxml[0][1]["username"]
+contraseña = Confxml[0][1]["passwd"]
+ipserv = Confxml[1][1]["ip"]
+portserv = Confxml[1][1]["puerto"]
+rtaudio = Confxml[2][1]["puerto"]
+iproxy = Confxml[3][1]["ip"]
+portproxy = Confxml[3][1]["puerto"]
+log = Confxml[4][1]["path"]
+audio = Confxml[5][1]["path"]
+
+
+
 class EchoHandler(socketserver.DatagramRequestHandler):
     """
     Echo server class
@@ -48,11 +96,6 @@ class EchoHandler(socketserver.DatagramRequestHandler):
 
 if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
-    if len(sys.argv) != 4:
-       sys.exit("Usage: python server.py IP port audio_file")
-    PORT = int(sys.argv[2])
-    IP = sys.argv[1]
-    Fichero = sys.argv[3]
     if not os.path.exists (Fichero):
         sys.exit("Usage: python server.py IP port audio_file")
     serv = socketserver.UDPServer((IP, int(PORT)), EchoHandler)
