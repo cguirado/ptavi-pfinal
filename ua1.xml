@@ -1,5 +1,5 @@
 <config>
-  <account nombre="lore" passwd="chile" />
+  <account username="lore@prueba.com" passwd="chile" />
   <uaserver ip="127.0.0.1" puerto="5060"/>
   <rtpaudio puerto="23032"/>
   <regproxy ip="localhost" puerto="6050"/>
