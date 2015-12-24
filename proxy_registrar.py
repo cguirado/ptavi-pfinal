@@ -39,10 +39,8 @@ parser = make_parser()
 chandler = CrearDicc()
 parser.setContentHandler(chandler)
 parser.parse(open(Config))
-#Aqui extraigo del xml a mi dicc
+#Aqui extraigo del xml a mi dicc mas variables
 Confxml = chandler.get_tags()
-
-
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
