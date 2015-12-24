@@ -30,22 +30,34 @@ class CrearDicc (ContentHandler)
                       "log":['path'],
                       "audio":['path']}
 
+#Metodo para coger los elemenos
     def startElement(self, name, attrs):
         if name in self.dicc:
             dicc2={}
             for atributo in self.dicc[name]:
+                #Guardar los atributos en mi diccionario
                 dicc2[atributo] = attrs.get(atributo,"")
+                #Añadir sin borrar
             self.tags.append([name,dicc2])
 
     def get_tags(self):
         return self.tags
 
+paser = make_parser()
+chandler = CrearDicc()
+paser.setContentHandler(chandler)
+paser.pase(open(Config))
+#Aqui extraigo del xml a mi dicc
+Confxml = chandler.get_tags()
+#Sacar las cosas de mi dicc separando por tipos...
+
+"""
 Separar = Direccion.split(":")
 part1 = Separar[0]
 PORT = int(Separar[1])
 Login = part1.split("@")[0]
 IP = part1.split("@")[1]
-
+"""
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
