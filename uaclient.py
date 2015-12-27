@@ -16,11 +16,11 @@ if len(sys.argv) != 4:
     sys.exit("Usage: python client.py config method opcion")
 # Dirección IP del servidor.
 SERVER = 'localhost'
-Config = sys.argv[2]
-Metodo = sys.argv[3]
-Opcion = sys.argv[4]
+Config = sys.argv[1]
+Metodo = sys.argv[2]
+Opcion = sys.argv[3]
 #Extraer del XML
-class CrearDicc (ContentHandler)
+class CrearDicc (ContentHandler):
     def __init__(self):
          self.tags = []
          self.dicc = {"account":['username','passwd'],
@@ -43,13 +43,24 @@ class CrearDicc (ContentHandler)
     def get_tags(self):
         return self.tags
 
-paser = make_parser()
+parser = make_parser()
 chandler = CrearDicc()
-paser.setContentHandler(chandler)
-paser.pase(open(Config))
+parser.setContentHandler(chandler)
+parser.parse(open(Config))
 #Aqui extraigo del xml a mi dicc
 Confxml = chandler.get_tags()
-#Sacar las cosas de mi dicc separando por tipos...
+
+#Coger  las cosas del xml en variables (si no las necesito las borro mas tarde)
+username = Confxml[0][1]["username"]
+contraseña = Confxml[0][1]["passwd"]
+ipserv = Confxml[1][1]["ip"]
+portserv = Confxml[1][1]["puerto"]
+rtaudio = Confxml[2][1]["puerto"]
+iproxy = Confxml[3][1]["ip"]
+portproxy = Confxml[3][1]["puerto"]
+log = Confxml[4][1]["path"]
+audio = Confxml[5][1]["path"]
+
 
 """
 Separar = Direccion.split(":")
@@ -61,14 +72,14 @@ IP = part1.split("@")[1]
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-my_socket.connect((SERVER, PORT))
+my_socket.connect((ipserv, int(portserv)))
 
 #Contenido que enviamos
 
 if Metodo == "INVITE":
-    LINE = ("INVITE sip:" + Login + "@" + IP + " SIP/2.0" + "\r\n")
+    LINE = ("INVITE sip:" + Opcion + "@" + ipserv + " SIP/2.0" + "\r\n")
 if Metodo == "BYE":
-    LINE = ("BYE sip:" + Login + "@" + IP + " SIP/2.0" + "\r\n")
+    LINE = ("BYE sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
 if Metodo not in ["INVITE", "BYE"]:
     sys.exit("Usage: python client.py method receiver@IP:SIPport" +
              "method == INVITE o BYE" )
@@ -81,7 +92,7 @@ print('Recibido -- ', data.decode('utf-8'))
 Recibido = data.decode('utf-8')
 Part_Recb = Recibido.split()
 if Part_Recb[1] == "100" and Part_Recb[4] == "180" and Part_Recb[7] == "200":
-    LINE = ("ACK sip:" + Login + "@" + IP + " SIP/2.0" + "\r\n")
+    LINE = ("ACK sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
 print("Terminando socket...")
 
