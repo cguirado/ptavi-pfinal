@@ -72,12 +72,30 @@ IP = part1.split("@")[1]
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-my_socket.connect((ipserv, int(portserv)))
+my_socket.connect((iproxy, int(portproxy)))
 
 #Contenido que enviamos
-
+if Metodo == "REGISTER":
+    #REGISTER sip:leonard@bigbang.org:1234 SIP/2.0
+    #Expires: 3600
+    LINE = ("REGISTER sip:" + username + ":" + portserv + "SIP/2.0 \r\n" )
+    LINE += ("Expires: " + Opcion)
 if Metodo == "INVITE":
-    LINE = ("INVITE sip:" + Opcion + "@" + ipserv + " SIP/2.0" + "\r\n")
+    """
+INVITE sip:penny@girlnextdoor.com SIP/2.0
+Content-Type: application/sdp
+v=0
+o=leonard@bigbang.org 127.0.0.1
+s=misesion
+t=0
+m=audio 34543 RTP
+    """
+    LINE = ("INVITE sip:" + Opcion + " SIP/2.0" + "\r\n")
+    LINE += ("Content-Type: application/sdp \r\n ")
+    LINE += ("v=0 \r\n")
+    LINE += ("o=" + username + ipserv)
+    LINE += ("t=0")
+    LINE += ("m= audio" + rtaudio + "RTP" )
 if Metodo == "BYE":
     LINE = ("BYE sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
 if Metodo not in ["INVITE", "BYE"]:
