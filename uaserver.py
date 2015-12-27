@@ -8,11 +8,12 @@ import socketserver
 import sys
 import os
 import os.path
-
+from xml.sax import make_parser
+from xml.sax.handler import ContentHandler
 # Creamos servidor de eco y escuchamos
 if len(sys.argv) != 2:
    sys.exit("Usage: python server.py config")
-fichero = sys.argv[1]
+Config = sys.argv[1]
 #Extraemos del xml
 class CrearDicc (ContentHandler):
     def __init__(self):
@@ -96,8 +97,8 @@ class EchoHandler(socketserver.DatagramRequestHandler):
 
 if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
-    if not os.path.exists (Fichero):
+    if not os.path.exists (Config):
         sys.exit("Usage: python server.py IP port audio_file")
-    serv = socketserver.UDPServer((IP, int(PORT)), EchoHandler)
+    serv = socketserver.UDPServer((ipserv, int(portserv)), EchoHandler)
     print("Listening...")
     serv.serve_forever()
