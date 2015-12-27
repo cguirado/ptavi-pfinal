@@ -38,9 +38,15 @@ class CrearDicc (ContentHandler):
 parser = make_parser()
 chandler = CrearDicc()
 parser.setContentHandler(chandler)
-parser.parse(open(Config))
+parser.parse(open(sys.argv[1]))
 #Aqui extraigo del xml a mi dicc mas variables
 Confxml = chandler.get_tags()
+name = Confxml[0][1]["name"]
+ip = Confxml[0][1]["ip"]
+puerto = Confxml[0][1]["puerto"]
+datapath = Confxml[1][1]["path"]
+datapasswd = Confxml[1][1]["passwdpath"]
+log = Confxml[2][1]["path"]
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
