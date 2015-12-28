@@ -70,9 +70,9 @@ class EchoHandler(socketserver.DatagramRequestHandler):
         newfich = "registered.json"
         with open(newfich, 'w') as ficherojson:
             json.dump(self.dicserv, ficherojson)
-    def registrados (self, dic, ip)
+    def registrados (self):
     #Usuario se registra o borrar
-        if datapath = ""
+        if datapath == "":
             datapath = "register.txt"
             #Abrimos el fichero
         fich = open(datapath,"w")
@@ -83,7 +83,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             tiempo = self.dicserv [usuario][3]
             # escribir en el fichero
             fich.write(usuario + " " + ip + " " + puerto
-                        + " "+ hora + " "+ tiempo)
+                    + " " + hora + " " + tiempo)
 
     def json2registered(self):
         try:
@@ -119,6 +119,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 #metodo = ["REGISTER", "ACK","INVITE", "BYE"]
             if metodo == "REGISTER":
                 #Sacado las cosas que nos interesa de la lina para el register
+                print("Comienza REGISTER")
                 valor = linea[3]
                 resto = linea[1]
                 rest = resto.split(":")
@@ -142,6 +143,24 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                             for cliente in lista:
                                 del self.dicserv[cliente]
                             self.register2json()
+            if metodo == "INVITE":
+                print ("comienza INVITE")
+                #Sacamos a quien queremos enviar
+                dic = linea[1]
+                direccion = dic.split(":")[1]
+                puerto = linea[13]
+                if direccion in self.diccserv:
+                    uaip = self.diccserv[direccion][0]
+                    uapuerto = self.diccserv[direccion][1]
+                # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
+                my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                my_socket.connect((uaip, int(uaproxy)))
+
+
+
+
+
 if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
     PORT = int(puerto)
