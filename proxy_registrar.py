@@ -47,6 +47,9 @@ puerto = Confxml[0][1]["puerto"]
 datapath = Confxml[1][1]["path"]
 datapasswd = Confxml[1][1]["passwdpath"]
 log = Confxml[2][1]["path"]
+if ip == "":
+    ip = ("127.0.0.1")
+
 '''
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -62,17 +65,14 @@ class EchoHandler(socketserver.DatagramRequestHandler):
     dicserv = {}
 
     def register2json(self):
-        """
-        Creamos fichero json
-        """
+        #Creamos fichero
+
         newfich = "registered.json"
         with open(newfich, 'w') as ficherojson:
             json.dump(self.dicserv, ficherojson)
 
+
     def json2registered(self):
-        """
-        Si tenemos fichero json lo leemos
-        """
         try:
             with open("registered.json", 'r') as existe:
                 self.dicserv = json.load(existe)
@@ -97,7 +97,6 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             line = lineb.decode('utf-8')
             linea = line.split()
             metodo = linea[0]
-
             if not linea:  # Si no hay más líneas salimos del bucle infinito
                 break
                 """
@@ -106,7 +105,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 """
                 #metodo = ["REGISTER", "ACK","INVITE", "BYE"]
             if metodo == "REGISTER":
-                print("LINEA", linea)
+                #Sacado las cosas que nos interesa de la lina para el register
                 valor = linea[3]
                 resto = linea[1]
                 rest = resto.split(":")
@@ -115,15 +114,14 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 formato = '%Y-%m-%d %H:%M:%S'
                 valor1 = int(valor) + int(time.time())
                 tiempo = time.strftime(formato, time.gmtime(valor1))
-                if int(valor) == 0:
+                if valor == 0:
                     del self.dicserv[direccion]
                 else:
-                    USER = direccion.split(":")[1]
-                    self.dicserv[direccion] = [str(IP), tiempo]
-                    self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
-
+                    #USER = direccion.split(":")[1]
+                    self.dicserv[direccion] = [str(IP), puerto, tiempo]
+                    #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
                     lista = []
-                    print(self.dicserv)
+                    print("AQUI",self.dicserv)
                     for usuario in self.dicserv:
                         nuevo = self.dicserv[usuario][1]
                         if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
