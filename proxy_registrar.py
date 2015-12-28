@@ -70,7 +70,20 @@ class EchoHandler(socketserver.DatagramRequestHandler):
         newfich = "registered.json"
         with open(newfich, 'w') as ficherojson:
             json.dump(self.dicserv, ficherojson)
-
+    def registrados (self, dic, ip)
+    #Usuario se registra o borrar
+        if datapath = ""
+            datapath = "register.txt"
+            #Abrimos el fichero
+        fich = open(datapath,"w")
+        for usuario in self.dicserv:
+            ip = self.dicserv [usuario][0]
+            puerto = self.dicserv [usuario][1]
+            hora = self.dicserv [usuario][2]
+            tiempo = self.dicserv [usuario][3]
+            # escribir en el fichero
+            fich.write(usuario + " " + ip + " " + puerto
+                        + " "+ hora + " "+ tiempo)
 
     def json2registered(self):
         try:
@@ -118,7 +131,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     del self.dicserv[direccion]
                 else:
                     #USER = direccion.split(":")[1]
-                    self.dicserv[direccion] = [str(IP), puerto, tiempo]
+                    self.dicserv[direccion] = [str(IP), puerto, tiempo, valor]
                     #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
                     lista = []
                     print("AQUI",self.dicserv)
