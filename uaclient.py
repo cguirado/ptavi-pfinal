@@ -96,6 +96,9 @@ m=audio 34543 RTP
     LINE += ("o=" + username + ipserv)
     LINE += ("t=0")
     LINE += ("m= audio" + rtaudio + "RTP" )
+if Metodo == "ACK":
+    #No estoy segura de esto
+    LINE = "200 OK ACK"
 if Metodo == "BYE":
     LINE = ("BYE sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
 if Metodo not in ["INVITE", "BYE"]:
@@ -104,7 +107,8 @@ if Metodo not in ["INVITE", "BYE"]:
 
 print("Enviando: " + LINE)
 my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-data = my_socket.recv(1024)
+#data = my_socket.recv(1024)
+data = my_socket.recv(portserv)
 
 print('Recibido -- ', data.decode('utf-8'))
 Recibido = data.decode('utf-8')
