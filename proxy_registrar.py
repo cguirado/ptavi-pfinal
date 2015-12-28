@@ -47,6 +47,12 @@ puerto = Confxml[0][1]["puerto"]
 datapath = Confxml[1][1]["path"]
 datapasswd = Confxml[1][1]["passwdpath"]
 log = Confxml[2][1]["path"]
+'''
+# Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
+my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+my_socket.connect((iproxy, int(portproxy)))
+'''
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
@@ -89,33 +95,45 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             lineb = self.rfile.read()
             print("El cliente nos manda " + lineb.decode('utf-8'))
             line = lineb.decode('utf-8')
-            if not line:  # Si no hay más líneas salimos del bucle infinito
+            linea = line.split()
+            metodo = linea[0]
+
+            if not linea:  # Si no hay más líneas salimos del bucle infinito
                 break
-            (metodo, direccion, elresto, expire, valor) = line.split()
+                """
             if metodo != "REGISTER" and not "@" in direccion:
                 break
-            formato = '%Y-%m-%d %H:%M:%S'
-            valor1 = int(valor) + int(time.time())
-            tiempo = time.strftime(formato, time.gmtime(valor1))
-            if int(valor) == 0:
-                del self.dicserv[direccion]
-            else:
-                USER = direccion.split(":")[1]
-                self.dicserv[direccion] = [str(IP), tiempo]
-            self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
+                """
+                #metodo = ["REGISTER", "ACK","INVITE", "BYE"]
+            if metodo == "REGISTER":
+                print("LINEA", linea)
+                valor = linea[3]
+                resto = linea[1]
+                rest = resto.split(":")
+                direccion = rest[1]
+                puerto =  rest[2]
+                formato = '%Y-%m-%d %H:%M:%S'
+                valor1 = int(valor) + int(time.time())
+                tiempo = time.strftime(formato, time.gmtime(valor1))
+                if int(valor) == 0:
+                    del self.dicserv[direccion]
+                else:
+                    USER = direccion.split(":")[1]
+                    self.dicserv[direccion] = [str(IP), tiempo]
+                    self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
 
-            lista = []
-            print(self.dicserv)
-            for usuario in self.dicserv:
-                nuevo = self.dicserv[usuario][1]
-                if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
-                    lista.append(usuario)
-            for cliente in lista:
-                del self.dicserv[cliente]
-            self.register2json()
+                    lista = []
+                    print(self.dicserv)
+                    for usuario in self.dicserv:
+                        nuevo = self.dicserv[usuario][1]
+                        if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
+                            lista.append(usuario)
+                            for cliente in lista:
+                                del self.dicserv[cliente]
+                            self.register2json()
 if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
-    PORT = int(sys.argv[1])
+    PORT = int(puerto)
     serv = socketserver.UDPServer(('', PORT), EchoHandler)
     print("Lanzando servidor UDP de eco...")
     serv.serve_forever()
