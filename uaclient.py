@@ -8,6 +8,7 @@ import socket
 import sys
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+import random
 
 # Cliente UDP simple.
 
@@ -19,6 +20,7 @@ SERVER = 'localhost'
 Config = sys.argv[1]
 Metodo = sys.argv[2]
 Opcion = sys.argv[3]
+aleatorio = random.randint(70000000,80000000)
 #Extraer del XML
 class CrearDicc (ContentHandler):
     def __init__(self):
@@ -78,7 +80,7 @@ my_socket.connect((iproxy, int(portproxy)))
 if Metodo == "REGISTER":
     #REGISTER sip:leonard@bigbang.org:1234 SIP/2.0
     #Expires: 3600
-    LINE = ("REGISTER sip:" + username + ":" + portserv + "SIP/2.0 \r\n" )
+    LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
     LINE += ("Expires: " + Opcion)
 if Metodo == "INVITE":
     """
@@ -93,9 +95,9 @@ m=audio 34543 RTP
     LINE = ("INVITE sip:" + Opcion + " SIP/2.0" + "\r\n")
     LINE += ("Content-Type: application/sdp \r\n ")
     LINE += ("v=0 \r\n")
-    LINE += ("o=" + username + ipserv)
-    LINE += ("t=0")
-    LINE += ("m= audio" + rtaudio + "RTP" )
+    LINE += ("o= " + username + " " +ipserv + "\r\n" )
+    LINE += ("t=0" + "\r\n")
+    LINE += ("m = audio " + rtaudio + " RTP \r\n")
 if Metodo == "ACK":
     #No estoy segura de esto
     LINE = "200 OK ACK"
@@ -108,15 +110,26 @@ if Metodo not in ["INVITE", "BYE"]:
 """
 print("Enviando: " + LINE)
 my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-#data = my_socket.recv(1024)
-data = my_socket.recv(portproxy)
+data = my_socket.recv(int(portproxy))
 
 print('Recibido -- ', data.decode('utf-8'))
 Recibido = data.decode('utf-8')
-Part_Recb = Recibido.split()
+#Si rebibo 7 cosas del Register  y la segunda que recibo es 401
+#debo enviar otra vez register
+reciv = Recibido.split()
+if reciv[1] == "401":
+    print("Debo volver a enviar REGISTER + autori...")
+    LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
+    LINE += ("Expires: " + Opcion + "\r\n")
+    LINE += ("Autorization: response=" + str(aleatorio))
+    print("Enviando: " + LINE)
+    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    data = my_socket.recv(int(portproxy))
+"""
 if Part_Recb[1] == "100" and Part_Recb[4] == "180" and Part_Recb[7] == "200":
     LINE = ("ACK sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    """
 print("Terminando socket...")
 
 # Cerramos todo
