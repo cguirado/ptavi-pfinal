@@ -125,6 +125,8 @@ if reciv[1] == "401":
     print("Enviando: " + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(int(portproxy))
+if reciv[1] == "200":
+        print("Register bien hecho")
 """
 if Part_Recb[1] == "100" and Part_Recb[4] == "180" and Part_Recb[7] == "200":
     LINE = ("ACK sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
