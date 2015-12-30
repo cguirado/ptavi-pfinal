@@ -8,6 +8,7 @@ import socketserver
 import sys
 import json
 import time
+import random
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 #Comparar argumentos
@@ -102,47 +103,56 @@ class EchoHandler(socketserver.DatagramRequestHandler):
         print("Puerto: ", PORT)
         if len(self.dicserv) == 0:
             self.json2registered()
-            self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
+            #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
             lineb = self.rfile.read()
             print("El cliente nos manda " + lineb.decode('utf-8'))
             line = lineb.decode('utf-8')
             linea = line.split()
-            metodo = linea[0]
+
             if not linea:  # Si no hay más líneas salimos del bucle infinito
                 break
-                """
-            if metodo != "REGISTER" and not "@" in direccion:
-                break
-                """
                 #metodo = ["REGISTER", "ACK","INVITE", "BYE"]
+            metodo = linea[0]
             if metodo == "REGISTER":
                 #Sacado las cosas que nos interesa de la lina para el register
-                print("Comienza REGISTER")
-                valor = linea[3]
+                #print("Comienza REGISTER")
+                valor = linea[4]
                 resto = linea[1]
                 rest = resto.split(":")
                 direccion = rest[1]
                 puerto =  rest[2]
-                formato = '%Y-%m-%d %H:%M:%S'
-                valor1 = int(valor) + int(time.time())
-                tiempo = time.strftime(formato, time.gmtime(valor1))
-                if valor == 0:
-                    del self.dicserv[direccion]
-                else:
-                    #USER = direccion.split(":")[1]
-                    self.dicserv[direccion] = [str(IP), puerto, tiempo, valor]
-                    #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
-                    lista = []
-                    print("AQUI",self.dicserv)
-                    for usuario in self.dicserv:
-                        nuevo = self.dicserv[usuario][1]
-                        if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
-                            lista.append(usuario)
-                            for cliente in lista:
-                                del self.dicserv[cliente]
-                            self.register2json()
+                aleatorio = random.randint(70000000,80000000)
+                if len(linea)==5:
+                    print("Falta el nonce para autorizar registro")
+                    sms = ("SIP/2.0 401 Unauthorized"+"\r\n")
+                    sms += ("WWW Authenticate: "+ "nonce= "+ str(aleatorio) + "\r\n")
+                    self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
+                    print("Enviamos al cliente: " + sms)
+                elif len(linea) == 7:
+                    print("Autorizamos registro")
+                    formato = '%Y-%m-%d %H:%M:%S'
+                    valor1 = int(valor) + int(time.time())
+                    tiempo = time.strftime(formato, time.gmtime(valor1))
+                    if valor == 0:
+                        del self.dicserv[direccion]
+                    else:
+                        #USER = direccion.split(":")[1]
+                        self.dicserv[direccion] = [str(IP), puerto, tiempo, valor]
+                        #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
+                        lista = []
+                        print("AQUI",self.dicserv)
+                        for usuario in self.dicserv:
+                            nuevo = self.dicserv[usuario][2]
+                            if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
+                                lista.append(usuario)
+                                for cliente in lista:
+                                    del self.dicserv[cliente]
+                                self.register2json()
+
+
+
             if metodo == "INVITE":
                 print ("comienza INVITE")
                 #Sacamos a quien queremos enviar
@@ -156,6 +166,8 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((uaip, int(uaproxy)))
+                #Envio el invite al servidor con el que quiero comunicarme!!
+                my_socket.send(line)
 
 
 
