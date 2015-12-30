@@ -119,6 +119,7 @@ Recibido = data.decode('utf-8')
 reciv = Recibido.split()
 print("AQUI",reciv[1])
 if reciv[1] == "401":
+    #Cuando me mandan un 401
     print("Debo volver a enviar REGISTER + autori...")
     LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
     LINE += ("Expires: " + Opcion + "\r\n")
