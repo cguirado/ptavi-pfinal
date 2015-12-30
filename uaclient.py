@@ -117,6 +117,7 @@ Recibido = data.decode('utf-8')
 #Si rebibo 7 cosas del Register  y la segunda que recibo es 401
 #debo enviar otra vez register
 reciv = Recibido.split()
+print("AQUI",reciv[1])
 if reciv[1] == "401":
     print("Debo volver a enviar REGISTER + autori...")
     LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
@@ -125,8 +126,12 @@ if reciv[1] == "401":
     print("Enviando: " + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(int(portproxy))
+    #Tengo que solucionar esto!
+print('Recibido -- ', data.decode('utf-8'))
+Recibido = data.decode('utf-8')
+reciv = Recibido.split()
 if reciv[1] == "200":
-        print("Register bien hecho")
+        print(Recibido)
 """
 if Part_Recb[1] == "100" and Part_Recb[4] == "180" and Part_Recb[7] == "200":
     LINE = ("ACK sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
