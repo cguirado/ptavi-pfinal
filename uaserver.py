@@ -77,7 +77,11 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 break
             print("El cliente nos manda " + lineb.decode('utf-8'))
             line = lineb.decode('utf-8')
-            (metodo, direccion, elresto) = line.split()
+            print (line)
+            linea = line.split()
+            metodo = linea[0]
+            print("METODO", metodo, linea)
+            #(metodo, direccion, elresto) = line.split()
             if metodo == "INVITE":
                 self.wfile.write(b"SIP/2.0 100 Trying"+b"\r\n"+b"\r\n")
                 self.wfile.write(b"SIP/2.0 180 Ring"+b"\r\n"+b"\r\n")
