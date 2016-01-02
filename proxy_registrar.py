@@ -3,7 +3,7 @@
 """
 Clase (y programa principal) para un servidor de eco en UDP simple
 """
-
+import socket
 import socketserver
 import sys
 import json
@@ -132,6 +132,9 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     print("Enviamos al cliente: " + sms)
                 elif len(linea) == 7:
                     print("Autorizamos registro")
+                    sms = ("SIP/2.0 200 OK")
+                    self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
+                    print("Enviamos al cliente: " + sms)
                     formato = '%Y-%m-%d %H:%M:%S'
                     valor1 = int(valor) + int(time.time())
                     tiempo = time.strftime(formato, time.gmtime(valor1))
@@ -152,23 +155,36 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                                 self.register2json()
 
 
-
             if metodo == "INVITE":
                 print ("comienza INVITE")
                 #Sacamos a quien queremos enviar
+                print(linea)
                 dic = linea[1]
-                direccion = dic.split(":")[1]
+                direc = dic.split(":")[1]
                 puerto = linea[13]
-                if direccion in self.diccserv:
-                    uaip = self.diccserv[direccion][0]
-                    uapuerto = self.diccserv[direccion][1]
+                print(direc,puerto)
+                if direc in self.dicserv:
+                    print("AQUI invite",self.dicserv)
+                    uaip = self.dicserv[direc][0]
+                    uapuerto = self.dicserv[direc][1]
+                    print(uaip,uapuerto)
+                else:
+                    print("No se encuentra registrado " + direc)
+
                 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                my_socket.connect((uaip, int(uaproxy)))
+                my_socket.connect((uaip, int(uapuerto)))
                 #Envio el invite al servidor con el que quiero comunicarme!!
-                my_socket.send(line)
-
+                print("Mandamos el invite al servidor")
+                my_socket.send(bytes(line, 'utf-8') + b'\r\n')
+                print("Esperamos que nos llegue algo?")
+                data = my_socket.recv(int(uapuerto))
+                print('Recibido -- ', data.decode('utf-8'))
+                Recibido = data.decode('utf-8')
+                Part_Recb = Recibido.split()
+                print("Volvemos a enviar al cliente la contestacion del serv")
+                self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
 
 
 
