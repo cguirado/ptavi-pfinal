@@ -123,7 +123,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 rest = resto.split(":")
                 direccion = rest[1]
                 puerto =  rest[2]
-                aleatorio = random.randint(70000000,80000000)
+                aleatorio = random.randint(100000000000000000000,999999999999999999999)
                 if len(linea)==5:
                     print("Falta el nonce para autorizar registro")
                     sms = ("SIP/2.0 401 Unauthorized"+"\r\n")
@@ -154,7 +154,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                                     del self.dicserv[cliente]
                                 self.register2json()
 
-
+                print("Antes del invite",self.dicserv)
             if metodo == "INVITE":
                 print ("comienza INVITE")
                 #Sacamos a quien queremos enviar
@@ -163,29 +163,46 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 direc = dic.split(":")[1]
                 puerto = linea[13]
                 print(direc,puerto)
+                print(self.dicserv)
                 if direc in self.dicserv:
                     print("AQUI invite",self.dicserv)
                     uaip = self.dicserv[direc][0]
                     uapuerto = self.dicserv[direc][1]
                     print(uaip,uapuerto)
-                else:
-                    print("No se encuentra registrado " + direc)
+        # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
+                    my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    my_socket.connect((uaip, int(uapuerto)))
+                    #Envio el invite al servidor con el que quiero comunicarme!!
+                    print("Mandamos el invite al servidor")
+                    my_socket.send(bytes(line, 'utf-8') + b'\r\n')
+                    print("Esperamos que nos llegue algo?")
+                    data = my_socket.recv(int(uapuerto))
+                    print('Recibido -- ', data.decode('utf-8'))
+                    Recibido = data.decode('utf-8')
+                    Part_Recb = Recibido.split()
+                    print("Volvemos a enviar al cliente la contestacion del serv")
+                    self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
 
+                else:
+                    mensaje = ("SIP/2.0 404 User Not Found")
+                    self.wfile.write(bytes (mensaje,'utf-8') +b"\r\n"+b"\r\n")
+
+            if metodo == "ACK":
+                print("Comienza ack")
+                dic = linea[1]
+                direc = dic.split(":")[1]
+                if direc in self.dicserv:
+                    uaip = self.dicserv[direc][0]
+                    uapuerto = self.dicserv[direc][1]
+                print("Dentro del ACK: ", uapuerto,uaip )
                 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((uaip, int(uapuerto)))
-                #Envio el invite al servidor con el que quiero comunicarme!!
-                print("Mandamos el invite al servidor")
+                print("Mandamos el ACK al servidor")
+                print(line)
                 my_socket.send(bytes(line, 'utf-8') + b'\r\n')
-                print("Esperamos que nos llegue algo?")
-                data = my_socket.recv(int(uapuerto))
-                print('Recibido -- ', data.decode('utf-8'))
-                Recibido = data.decode('utf-8')
-                Part_Recb = Recibido.split()
-                print("Volvemos a enviar al cliente la contestacion del serv")
-                self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
-
 
 
 
