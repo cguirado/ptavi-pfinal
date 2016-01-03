@@ -80,6 +80,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             print (line)
             linea = line.split()
             metodo = linea[0]
+            print("LLEGAAAAA",metodo)
             print("METODO", metodo, linea)
             #(metodo, direccion, elresto) = line.split()
             if metodo == "INVITE":
@@ -89,6 +90,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             elif metodo == "BYE":
                 self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
             elif metodo == "ACK":
+                print("Llega??")
                 Ejecutar = "./mp32rtp -i " + IP + " -p 23032 <" + sys.argv[3]
                 os.system(Ejecutar)
             elif metodo not in ["INVITE", "BYE", "ACK"]:
