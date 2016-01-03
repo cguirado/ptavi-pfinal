@@ -20,7 +20,7 @@ SERVER = 'localhost'
 Config = sys.argv[1]
 Metodo = sys.argv[2]
 Opcion = sys.argv[3]
-aleatorio = random.randint(70000000,80000000)
+aleatorio = random.randint(100000000000000000000,999999999999999999999)
 #Extraer del XML
 class CrearDicc (ContentHandler):
     def __init__(self):
@@ -117,7 +117,7 @@ Recibido = data.decode('utf-8')
 #Si rebibo 7 cosas del Register  y la segunda que recibo es 401
 #debo enviar otra vez register
 reciv = Recibido.split()
-print("AQUI",reciv[1])
+print(reciv)
 if reciv[1] == "401":
     #Cuando me mandan un 401
     print("Debo volver a enviar REGISTER + autori...")
@@ -128,11 +128,16 @@ if reciv[1] == "401":
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(int(portproxy))
     #Tengo que solucionar esto!
+elif reciv[1] == "404":
+    print("no registrado el usuario")
 print('Recibido -- ', data.decode('utf-8'))
 Recibido = data.decode('utf-8')
 reciv = Recibido.split()
-if reciv[1] == "200":
-        print(Recibido)
+if reciv[1] == "100" and reciv[4]=="180" and reciv[7] == "200":
+        print("Contestar ACK")
+        LINE = ("ACK sip:" + username + " SIP/2.0 \r\n" )
+        print("Enviando: " + LINE)
+        my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
 """
 if Part_Recb[1] == "100" and Part_Recb[4] == "180" and Part_Recb[7] == "200":
     LINE = ("ACK sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
