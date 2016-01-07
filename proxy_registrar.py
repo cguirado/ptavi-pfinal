@@ -219,6 +219,13 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 print("Mandamos BYE al servidor")
                 print(line)
                 my_socket.send(bytes(line, 'utf-8') + b'\r\n')
+                print("Esperamos que nos llegue algo?")
+                data = my_socket.recv(int(uapuerto))
+                print('Recibido -- ', data.decode('utf-8'))
+                Recibido = data.decode('utf-8')
+                Part_Recb = Recibido.split()
+                print("Volvemos a enviar al cliente la contestacion del serv")
+                self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
 
 
 
