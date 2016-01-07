@@ -9,8 +9,12 @@ import sys
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 import random
+import hashlib
+import os
+import os.path
 
 # Cliente UDP simple.
+
 
 #Comparar argumentos
 if len(sys.argv) != 4:
@@ -93,22 +97,25 @@ t=0
 m=audio 34543 RTP
     """
     LINE = ("INVITE sip:" + Opcion + " SIP/2.0" + "\r\n")
-    LINE += ("Content-Type: application/sdp \r\n ")
+    LINE += ("Content-Type: application/sdp \r\n\r\n ")
     LINE += ("v=0 \r\n")
-    LINE += ("o= " + username + " " +ipserv + "\r\n" )
+    LINE += ("o= " + username + " " + ipserv + "\r\n" )
     LINE += ("t=0" + "\r\n")
     LINE += ("m = audio " + rtaudio + " RTP \r\n")
 if Metodo == "ACK":
     #No estoy segura de esto
     LINE = "ACK sip: " + Opcion + "SIP/2.0"
+    print(LINE)
+
 if Metodo == "BYE":
     LINE = ("BYE sip:" + Opcion + " SIP/2.0" + "\r\n")
 
     """
-if Metodo not in ["INVITE", "BYE"]:
-    sys.exit("Usage: python client.py method receiver@IP:SIPport" +
-             "method == INVITE o BYE" )
-"""
+    Creo que seria asi
+    """
+if Metodo not in ["INVITE", "BYE", "ACK","REGISTER"]:
+    sys.exit("SIP/2.0 Bad Request" )
+
 print("Enviando: " + LINE)
 my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
 data = my_socket.recv(int(portproxy))
@@ -121,10 +128,16 @@ reciv = Recibido.split()
 print(reciv)
 if reciv[1] == "401":
     #Cuando me mandan un 401
+    nonce = reciv[6]
+    nonceb = (bytes(nonce,'utf-8'))
+    contraseñab = (bytes(contraseña,'utf-8'))
+    m = hashlib.md5()
+    m.update(contraseñab + nonceb)
+    respuesta = m.hexdigest()
     print("Debo volver a enviar REGISTER + autori...")
     LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
     LINE += ("Expires: " + Opcion + "\r\n")
-    LINE += ("Autorization: response=" + str(aleatorio))
+    LINE += ("Autorization: response=" + str(respuesta))
     print("Enviando: " + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(int(portproxy))
@@ -135,15 +148,30 @@ print('Recibido -- ', data.decode('utf-8'))
 Recibido = data.decode('utf-8')
 reciv = Recibido.split()
 if reciv[1] == "100" and reciv[4]=="180" and reciv[7] == "200":
-        print("Contestar ACK")
+    #Saco ip y puerto del servidor
+        ip_serv = reciv[14]
+        puerto_serv = puerto[19]
+        print("Contestar ACK", Recibido)
         LINE = ("ACK sip:" + Opcion + " SIP/2.0 \r\n" )
         print("Enviando: " + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+        print("Envio RTP", ip_serv,puerto_serv)
+        Ejecutar = "./mp32rtp -i " + ipserv + " -p "+
+        Ejecutar += puerto_serv + " < " + audio
+        os.system(Ejecutar)
 """
-if Part_Recb[1] == "100" and Part_Recb[4] == "180" and Part_Recb[7] == "200":
-    LINE = ("ACK sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
-    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-    """
+Creo que deberia enviar aqui el RTP no estoy segura
+
+    IP = "127.0.0.1"
+    Ejecutar = "./mp32rtp -i " + IP + " -p "+ rtaudio
+    Ejecutar += " < " + audio
+    os.system(Ejecutar)
+
+# Escuhchar el RTP
+print("Escuchamos el RTP ")
+cvlc rtp://@127.0.0.1:rtpaudio> /dev/null
+"""
+
 print("Terminando socket...")
 
 # Cerramos todo
