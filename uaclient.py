@@ -100,9 +100,10 @@ m=audio 34543 RTP
     LINE += ("m = audio " + rtaudio + " RTP \r\n")
 if Metodo == "ACK":
     #No estoy segura de esto
-    LINE = "200 OK ACK"
+    LINE = "ACK sip: " + Opcion + "SIP/2.0"
 if Metodo == "BYE":
-    LINE = ("BYE sip:" + username + "@" + ipserv + " SIP/2.0" + "\r\n")
+    LINE = ("BYE sip:" + Opcion + " SIP/2.0" + "\r\n")
+
     """
 if Metodo not in ["INVITE", "BYE"]:
     sys.exit("Usage: python client.py method receiver@IP:SIPport" +
@@ -135,7 +136,7 @@ Recibido = data.decode('utf-8')
 reciv = Recibido.split()
 if reciv[1] == "100" and reciv[4]=="180" and reciv[7] == "200":
         print("Contestar ACK")
-        LINE = ("ACK sip:" + username + " SIP/2.0 \r\n" )
+        LINE = ("ACK sip:" + Opcion + " SIP/2.0 \r\n" )
         print("Enviando: " + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
 """
