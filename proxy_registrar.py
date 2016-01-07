@@ -155,7 +155,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                                 self.register2json()
 
                 print("Antes del invite",self.dicserv)
-            if metodo == "INVITE":
+            elif metodo == "INVITE":
                 print ("comienza INVITE")
                 #Sacamos a quien queremos enviar
                 print(linea)
@@ -188,19 +188,35 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     mensaje = ("SIP/2.0 404 User Not Found")
                     self.wfile.write(bytes (mensaje,'utf-8') +b"\r\n"+b"\r\n")
 
-            if metodo == "ACK":
+            elif metodo == "ACK":
                 print("Comienza ack")
                 dic = linea[1]
                 direc = dic.split(":")[1]
-                if direc in self.dicserv:
-                    uaip = self.dicserv[direc][0]
-                    uapuerto = self.dicserv[direc][1]
+                print("direccion", direc)
+                uaip = self.dicserv[direc][0]
+                uapuerto = self.dicserv[direc][1]
                 print("Dentro del ACK: ", uapuerto,uaip )
                 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((uaip, int(uapuerto)))
                 print("Mandamos el ACK al servidor")
+                print(line)
+                my_socket.send(bytes(line, 'utf-8') + b'\r\n')
+
+            elif metodo == "BYE":
+                print("comienta el Bye")
+                dic = linea[1]
+                direc =  dic.split(":")[1]
+                print ("dic en BYE")
+                uaip = self.dicserv[direc][0]
+                uapuerto = self.dicserv[direc][1]
+                print("Dentro del BYE: ", uapuerto,uaip )
+                # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
+                my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                my_socket.connect((uaip, int(uapuerto)))
+                print("Mandamos BYE al servidor")
                 print(line)
                 my_socket.send(bytes(line, 'utf-8') + b'\r\n')
 
