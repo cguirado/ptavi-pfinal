@@ -55,7 +55,7 @@ iproxy = Confxml[3][1]["ip"]
 portproxy = Confxml[3][1]["puerto"]
 log = Confxml[4][1]["path"]
 audio = Confxml[5][1]["path"]
-
+IP = "127.0.0.1"
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
@@ -84,14 +84,17 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             print("METODO", metodo, linea)
             #(metodo, direccion, elresto) = line.split()
             if metodo == "INVITE":
-                self.wfile.write(b"SIP/2.0 100 Trying"+b"\r\n"+b"\r\n")
-                self.wfile.write(b"SIP/2.0 180 Ring"+b"\r\n"+b"\r\n")
-                self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
+                self.wfile.write(b"SIP/2.0 100 Trying"+b"\r\n")
+                self.wfile.write(b"SIP/2.0 180 Ring"+b"\r\n")
+                self.wfile.write(b"SIP/2.0 200 OK" + b"\r\n" +
+                            b"Content-Type: application/sdp"+b"\r\n"+b"\r\n")
+
             elif metodo == "BYE":
                 self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
             elif metodo == "ACK":
                 print("Llega??")
-                Ejecutar = "./mp32rtp -i " + IP + " -p 23032 <" + sys.argv[3]
+                Ejecutar = "./mp32rtp -i " + IP + " -p "+ rtaudio
+                Ejecutar += " < " + audio
                 os.system(Ejecutar)
             elif metodo not in ["INVITE", "BYE", "ACK"]:
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed" +
