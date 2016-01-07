@@ -62,7 +62,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
     """
     Echo server class
     """
-
+    cliente = {"ip_client":"", "puerto_client" : 0}
     def handle(self):
         # Escribe dirección y puerto del cliente (de tupla client_address)
         IP = self.client_address[0]
@@ -73,6 +73,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
             lineb = self.rfile.read()
+            cliente = {}
             if not lineb:
                 break
             print("El cliente nos manda " + lineb.decode('utf-8'))
@@ -84,17 +85,23 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             print("METODO", metodo, linea)
             #(metodo, direccion, elresto) = line.split()
             if metodo == "INVITE":
-                self.wfile.write(b"SIP/2.0 100 Trying"+b"\r\n")
-                self.wfile.write(b"SIP/2.0 180 Ring"+b"\r\n")
-                self.wfile.write(b"SIP/2.0 200 OK" + b"\r\n" +
-                            b"Content-Type: application/sdp"+b"\r\n"+b"\r\n")
-
+                mensaje = ("SIP/2.0 100 Trying"+"\r\n")
+                mensaje += ("SIP/2.0 180 Ring"+"\r\n")
+                mensaje += ("SIP/2.0 200 OK" + "\r\n")
+                mensaje += ("Content-Type: application/sdp"+"\r\n"+"\r\n")
+                mensaje += ("v=0 \r\n" + "o= " + username + " ")
+                mensaje += (ipserv + "\r\n" + "t=0" + "\r\n" )
+                mensaje += ("m = audio " + str(rtaudio) + " RTP \r\n")
+                self.wfile.write(bytes (mensaje,"utf-8"))
+                self.cliente['ip_client']= linea[8]
+                self.cliente['puerto_client'] = linea[13]
+                print(self.cliente)
             elif metodo == "BYE":
                 self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
             elif metodo == "ACK":
                 print("Llega??")
-                Ejecutar = "./mp32rtp -i " + IP + " -p "+ rtaudio
-                Ejecutar += " < " + audio
+                Ejecutar = "./mp32rtp -i " + cliente['ip_client'] + " -p "+
+                Ejecutar += cliente['puerto_client'] + " < " + audio
                 os.system(Ejecutar)
             elif metodo not in ["INVITE", "BYE", "ACK"]:
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed" +
