@@ -138,7 +138,8 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     formato = '%Y-%m-%d %H:%M:%S'
                     valor1 = int(valor) + int(time.time())
                     tiempo = time.strftime(formato, time.gmtime(valor1))
-                    if valor == 0:
+                    print("valor", valor)
+                    if valor == "0":
                         del self.dicserv[direccion]
                     else:
                         #USER = direccion.split(":")[1]
@@ -150,9 +151,9 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                             nuevo = self.dicserv[usuario][2]
                             if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
                                 lista.append(usuario)
-                                for cliente in lista:
-                                    del self.dicserv[cliente]
-                                self.register2json()
+                            for cliente in lista:
+                                del self.dicserv[cliente]
+                    self.register2json()
 
                 print("Antes del invite",self.dicserv)
             elif metodo == "INVITE":
@@ -227,6 +228,11 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 print("Volvemos a enviar al cliente la contestacion del serv")
                 self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
 
+            elif metodo not in ["REGISTER","INVITE", "BYE", "ACK"]:
+                self.wfile.write(b"SIP/2.0 405 Method Not Allowed" +
+                                 b"\r\n"+b"\r\n")
+            else:
+                self.wfile.write(b"SIP/2.0 400 Bad Request"+b"\r\n"+b"\r\n")
 
 
 if __name__ == "__main__":
