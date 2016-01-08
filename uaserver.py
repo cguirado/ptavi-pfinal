@@ -99,10 +99,11 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             elif metodo == "BYE":
                 self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
             elif metodo == "ACK":
-                print("Llega??")
-                Ejecutar = "./mp32rtp -i " + cliente['ip_client'] + " -p "+
-                Ejecutar += cliente['puerto_client'] + " < " + audio
+                print("Envio RTP")
+                Ejecutar = "./mp32rtp -i " + self.cliente['ip_client'] + " -p "
+                Ejecutar += self.cliente['puerto_client'] + " < " + audio
                 os.system(Ejecutar)
+                print("Termino RTP")
             elif metodo not in ["INVITE", "BYE", "ACK"]:
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed" +
                                  b"\r\n"+b"\r\n")
