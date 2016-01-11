@@ -125,28 +125,25 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 puerto =  rest[2]
                 aleatorio = random.randint(100000000000000000000,999999999999999999999)
                 if len(linea)==5:
-                    print("Falta el nonce para autorizar registro")
+                    #print("Falta el nonce para autorizar registro")
                     sms = ("SIP/2.0 401 Unauthorized"+"\r\n")
                     sms += ("WWW Authenticate: "+ "nonce= "+ str(aleatorio) + "\r\n")
                     self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
                     print("Enviamos al cliente: " + sms)
                 elif len(linea) == 7:
-                    print("Autorizamos registro")
+                    #print("Autorizamos registro")
                     sms = ("SIP/2.0 200 OK")
                     self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
                     print("Enviamos al cliente: " + sms)
                     formato = '%Y-%m-%d %H:%M:%S'
                     valor1 = int(valor) + int(time.time())
                     tiempo = time.strftime(formato, time.gmtime(valor1))
-                    print("valor", valor)
+
                     if valor == "0":
                         del self.dicserv[direccion]
                     else:
-                        #USER = direccion.split(":")[1]
                         self.dicserv[direccion] = [str(IP), puerto, tiempo, valor]
-                        #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
                         lista = []
-                        print("AQUI",self.dicserv)
                         for usuario in self.dicserv:
                             nuevo = self.dicserv[usuario][2]
                             if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
@@ -155,9 +152,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                                 del self.dicserv[cliente]
                     self.register2json()
 
-                print("Antes del invite",self.dicserv)
             elif metodo == "INVITE":
-                print ("comienza INVITE")
                 #Sacamos a quien queremos enviar
                 print(linea)
                 dic = linea[1]
@@ -166,7 +161,6 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 print(direc,puerto)
                 print(self.dicserv)
                 if direc in self.dicserv:
-                    print("AQUI invite",self.dicserv)
                     uaip = self.dicserv[direc][0]
                     uapuerto = self.dicserv[direc][1]
                     print(uaip,uapuerto)
@@ -175,14 +169,12 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     my_socket.connect((uaip, int(uapuerto)))
                     #Envio el invite al servidor con el que quiero comunicarme!!
-                    print("Mandamos el invite al servidor")
                     my_socket.send(bytes(line, 'utf-8') + b'\r\n')
-                    print("Esperamos que nos llegue algo?")
                     data = my_socket.recv(int(uapuerto))
                     print('Recibido -- ', data.decode('utf-8'))
                     Recibido = data.decode('utf-8')
                     Part_Recb = Recibido.split()
-                    print("Volvemos a enviar al cliente la contestacion del serv")
+                    #print("Volvemos a enviar al cliente la contestacion del serv")
                     self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
 
                 else:
@@ -190,10 +182,8 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     self.wfile.write(bytes (mensaje,'utf-8') +b"\r\n"+b"\r\n")
 
             elif metodo == "ACK":
-                print("Comienza ack")
                 dic = linea[1]
                 direc = dic.split(":")[1]
-                print("direccion", direc)
                 uaip = self.dicserv[direc][0]
                 uapuerto = self.dicserv[direc][1]
                 print("Dentro del ACK: ", uapuerto,uaip )
@@ -206,26 +196,20 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 my_socket.send(bytes(line, 'utf-8') + b'\r\n')
 
             elif metodo == "BYE":
-                print("comienta el Bye")
                 dic = linea[1]
                 direc =  dic.split(":")[1]
-                print ("dic en BYE")
                 uaip = self.dicserv[direc][0]
                 uapuerto = self.dicserv[direc][1]
-                print("Dentro del BYE: ", uapuerto,uaip )
                 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((uaip, int(uapuerto)))
                 print("Mandamos BYE al servidor")
-                print(line)
                 my_socket.send(bytes(line, 'utf-8') + b'\r\n')
-                print("Esperamos que nos llegue algo?")
                 data = my_socket.recv(int(uapuerto))
                 print('Recibido -- ', data.decode('utf-8'))
                 Recibido = data.decode('utf-8')
                 Part_Recb = Recibido.split()
-                print("Volvemos a enviar al cliente la contestacion del serv")
                 self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
 
             elif metodo not in ["REGISTER","INVITE", "BYE", "ACK"]:
@@ -239,5 +223,5 @@ if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
     PORT = int(puerto)
     serv = socketserver.UDPServer(('', PORT), EchoHandler)
-    print("Lanzando servidor UDP de eco...")
+    print("Lanzando servidor UDP de eco...(Listening)")
     serv.serve_forever()
