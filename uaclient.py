@@ -48,7 +48,7 @@ class CrearDicc (ContentHandler):
 
     def get_tags(self):
         return self.tags
-"""
+
 #Log fu
 
 def log_fich(fichero,metodo,ip,puerto,linea):
@@ -69,7 +69,7 @@ def log_fich(fichero,metodo,ip,puerto,linea):
     elif metodo == "Final":
         Log.write(time.strptime(formato,time.gmtime()) + linea)
     Log.close()
-"""
+
 
 
 parser = make_parser()
@@ -130,17 +130,18 @@ try:
         """
     if Metodo not in ["INVITE", "BYE", "ACK","REGISTER"]:
         sys.exit("SIP/2.0 Bad Request" )
-    #log_fich(log,"Envio",iproxy,portproxy,LINE)
+
     print("Enviando: " + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    #log_fich(log,"Envio",iproxy,portproxy,LINE)
     data = my_socket.recv(int(portproxy))
 
     print('Recibido -- ', data.decode('utf-8'))
     Recibido = data.decode('utf-8')
+    #log_fich(log,"Recibo",iproxy,portproxy,Recibido)
     #Si rebibo 7 cosas del Register  y la segunda que recibo es 401
     #debo enviar otra vez register
     reciv = Recibido.split()
-    print(reciv)
     if reciv[1] == "401":
         #Cuando me mandan un 401
         nonce = reciv[6]
@@ -149,17 +150,19 @@ try:
         m = hashlib.md5()
         m.update(contraseñab + nonceb)
         respuesta = m.hexdigest()
-        print("Debo volver a enviar REGISTER + autori...")
+        #print("Debo volver a enviar REGISTER + autori...")
         LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
         LINE += ("Expires: " + Opcion + "\r\n")
         LINE += ("Autorization: response=" + str(respuesta))
         print("Enviando: " + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+        #log_fich(log,"Envio",iproxy,portproxy,LINE)
         data = my_socket.recv(int(portproxy))
         #Tengo que solucionar esto!
-    elif reciv[1] == "404":
-        print("no registrado el usuario")
+    #elif reciv[1] == "404":
+    #    print("SIP/2.0 404 Uer Not Found")
     print('Recibido -- ', data.decode('utf-8'))
+    #log_fich(log,"Recibo",iproxy,portproxy,Recibido)
     Recibido = data.decode('utf-8')
     reciv = Recibido.split()
     if reciv[1] == "100" and reciv[4]=="180" and reciv[7] == "200":
@@ -170,6 +173,7 @@ try:
             LINE = ("ACK sip:" + Opcion + " SIP/2.0 \r\n" )
             print("Enviando: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+            #log_fich(log,"Envio",iproxy,portproxy,LINE)
             print("Envio RTP", ip_serv,puerto_serv)
             Ejecutar = "./mp32rtp -i " + ipserv + " -p "
             Ejecutar += puerto_serv + " < " + audio
@@ -185,4 +189,6 @@ try:
     my_socket.close()
     print("Fin.")
 except socket.error:
+    #log_fich(log,"Eror",iproxy,portproxy,mal)
+    #mal = ("Error: No server listening at ", iproxy, "port ", portproxy)
     print("Error: No server listening at ", iproxy, "port ", portproxy)
