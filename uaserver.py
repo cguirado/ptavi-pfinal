@@ -16,12 +16,13 @@ if len(sys.argv) != 2:
 Config = sys.argv[1]
 #Extraemos del xml
 class CrearDicc (ContentHandler):
+
     def __init__(self):
-         self.tags = []
-         self.dicc = {"account":['username','passwd'],
+        self.tags = []
+        self.dicc = {"account":['username', 'passwd'],
                       "uaserver":['ip', 'puerto'],
                       "rtpaudio":['puerto'],
-                      "regproxy":['ip','puerto'],
+                      "regproxy":['ip', 'puerto'],
                       "log":['path'],
                       "audio":['path']}
 
@@ -37,6 +38,27 @@ class CrearDicc (ContentHandler):
 
     def get_tags(self):
         return self.tags
+
+def log_fich(fichero,metodo,ip,puerto,linea):
+    print(fichero)
+    Log = open(fichero,'a')
+    formato = '%Y%m%d%H%M%S'
+    linea = linea.replace("\r\n", " ")
+    if metodo == "Envio":
+        Log.write(time.strftime(formato,time.gmtime()) + ' Sent to ' + ip + ":" + str(puerto) + ': ' +  linea + '\r\n')
+    elif metodo == "Recibo":
+        Log.write(time.strftime(formato,time.gmtime()) + ' Received from ' + ip + ":" + str(puerto) +
+                ': ' +  linea + '\r\n')
+    elif metodo == "Error":
+        Log.write(time.strftime(formato,time.gmtime()) + ' Error: ' +  linea + '\r\n')
+    elif metodo == "Otro":
+        #Para trazas mias
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+    elif metodo == "Empezar":
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+    elif metodo == "Final":
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+    Log.close()
 
 parser = make_parser()
 chandler = CrearDicc()
