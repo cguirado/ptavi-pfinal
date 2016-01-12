@@ -132,7 +132,7 @@ try:
         sys.exit("SIP/2.0 Bad Request" )
 
     print("Enviando: " + LINE)
-    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n' +b'\r\n')
     #log_fich(log,"Envio",iproxy,portproxy,LINE)
     data = my_socket.recv(int(portproxy))
 
@@ -158,26 +158,28 @@ try:
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         #log_fich(log,"Envio",iproxy,portproxy,LINE)
         data = my_socket.recv(int(portproxy))
-        #Tengo que solucionar esto!
-    #elif reciv[1] == "404":
-    #    print("SIP/2.0 404 Uer Not Found")
-    print('Recibido -- ', data.decode('utf-8'))
-    #log_fich(log,"Recibo",iproxy,portproxy,Recibido)
+        print('Recibido -- ', data.decode('utf-8'))
+        #log_fich(log,"Recibo",iproxy,portproxy,Recibido)
     Recibido = data.decode('utf-8')
     reciv = Recibido.split()
     if reciv[1] == "100" and reciv[4]=="180" and reciv[7] == "200":
         #Saco ip y puerto del servidor
             ip_serv = reciv[14]
             puerto_serv = reciv[19]
-            print("Contestar ACK", Recibido)
+            #print("Contestar ACK", Recibido)
             LINE = ("ACK sip:" + Opcion + " SIP/2.0 \r\n" )
             print("Enviando: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
             #log_fich(log,"Envio",iproxy,portproxy,LINE)
-            print("Envio RTP", ip_serv,puerto_serv)
+            #print("Envio RTP", ip_serv,puerto_serv)
             Ejecutar = "./mp32rtp -i " + ipserv + " -p "
             Ejecutar += puerto_serv + " < " + audio
             os.system(Ejecutar)
+            """
+            my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            my_socket.connect((ipserv, int(puerto_serv)))
+            """
             print("Termina RTP")
     """
     # Escuhchar el RTP
