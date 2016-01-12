@@ -1,8 +1,8 @@
 <config>
-  <account username="lore@prueba.com" passwd="chile" />
-  <uaserver ip="127.0.0.1" puerto="5060"/>
+  <account username="lore@casa.com" passwd="chile" />
+  <uaserver ip="127.0.0.1" puerto="6051"/>
   <rtpaudio puerto="23032"/>
-  <regproxy ip="localhost" puerto="6050"/>
+  <regproxy ip="localhost" puerto="5060"/>
   <log path=""/>
   <audio path="cancion.mp3" />
 </config>
