@@ -12,6 +12,7 @@ import random
 import hashlib
 import os
 import os.path
+import time
 
 # Cliente UDP simple.
 
@@ -52,22 +53,24 @@ class CrearDicc (ContentHandler):
 #Log fu
 
 def log_fich(fichero,metodo,ip,puerto,linea):
+    print(fichero)
     Log = open(fichero,'a')
-    formato = '%Y-%m-%d %H:%M:%S'
+    formato = '%Y%m%d%H%M%S'
+    linea = linea.replace("\r\n", " ")
     if metodo == "Envio":
-        Log.write(time.strptime(formato,time.gmtime()) + 'Sent to ' + ip + ":" + str(puerto) +
-                ': ' +  linea)
+        Log.write(time.strftime(formato,time.gmtime()) + ' Sent to ' + ip + ":" + str(puerto) + ': ' +  linea + '\r\n')
     elif metodo == "Recibo":
-        Log.write(time.strptime(formato,time.gmtime()) + 'Received from ' + ip + ":" + str(puerto) +
-                ': ' +  linea)
+        Log.write(time.strftime(formato,time.gmtime()) + ' Received from ' + ip + ":" + str(puerto) +
+                ': ' +  linea + '\r\n')
     elif metodo == "Error":
-        Log.write(time.strptime(formato,time.gmtime()) + 'Error: ' +  linea)
-    elif metodo == "otro":
-        Log.write(time.strptime(formato,time.gmtime()) + linea)
+        Log.write(time.strftime(formato,time.gmtime()) + ' Error: ' +  linea + '\r\n')
+    elif metodo == "Otro":
+        #Para trazas mias
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
     elif metodo == "Empezar":
-        Log.write(time.strptime(formato,time.gmtime()) + linea)
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
     elif metodo == "Final":
-        Log.write(time.strptime(formato,time.gmtime()) + linea)
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
     Log.close()
 
 
@@ -129,15 +132,18 @@ try:
         Creo que seria asi
         """
     if Metodo not in ["INVITE", "BYE", "ACK","REGISTER"]:
-        sys.exit("SIP/2.0 Bad Request" )
+        mens = ("SIP/2.0 Bad Request")
+        sys.exit(mens )
+        log_fich(log,"Error",iproxy,portproxy,mens)
 
     print("Enviando: " + LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n' +b'\r\n')
-    #log_fich(log,"Envio",iproxy,portproxy,LINE)
+    log_fich(log,"Envio",iproxy,portproxy,LINE)
     data = my_socket.recv(int(portproxy))
 
     print('Recibido -- ', data.decode('utf-8'))
     Recibido = data.decode('utf-8')
+    log_fich(log,"Recibo",iproxy,portproxy,Recibido)
     #log_fich(log,"Recibo",iproxy,portproxy,Recibido)
     #Si rebibo 7 cosas del Register  y la segunda que recibo es 401
     #debo enviar otra vez register
@@ -151,16 +157,17 @@ try:
         m.update(contraseñab + nonceb)
         respuesta = m.hexdigest()
         #print("Debo volver a enviar REGISTER + autori...")
-        LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
+        LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0\r\n" )
         LINE += ("Expires: " + Opcion + "\r\n")
         LINE += ("Autorization: response=" + str(respuesta))
         print("Enviando: " + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+        log_fich(log,"Envio",iproxy,portproxy,LINE)
         #log_fich(log,"Envio",iproxy,portproxy,LINE)
         data = my_socket.recv(int(portproxy))
-        print('Recibido -- ', data.decode('utf-8'))
-        #log_fich(log,"Recibo",iproxy,portproxy,Recibido)
+    print('Recibido -- ', data.decode('utf-8'))
     Recibido = data.decode('utf-8')
+    log_fich(log,"Recibo",iproxy,portproxy,Recibido)
     reciv = Recibido.split()
     if reciv[1] == "100" and reciv[4]=="180" and reciv[7] == "200":
         #Saco ip y puerto del servidor
@@ -170,16 +177,12 @@ try:
             LINE = ("ACK sip:" + Opcion + " SIP/2.0 \r\n" )
             print("Enviando: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+            log_fich(log,"Envio",iproxy,portproxy,LINE)
             #log_fich(log,"Envio",iproxy,portproxy,LINE)
             #print("Envio RTP", ip_serv,puerto_serv)
             Ejecutar = "./mp32rtp -i " + ipserv + " -p "
             Ejecutar += puerto_serv + " < " + audio
             os.system(Ejecutar)
-            """
-            my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            my_socket.connect((ipserv, int(puerto_serv)))
-            """
             print("Termina RTP")
     """
     # Escuhchar el RTP
