@@ -1,4 +1,4 @@
-#!/usr/bin/python
+    #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
 Clase (y programa principal) para un servidor de eco en UDP simple
@@ -11,6 +11,7 @@ import time
 import random
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+import hashlib
 #Comparar argumentos
 if len(sys.argv) != 2:
     sys.exit("Usage: python proxy_registrar.py config")
@@ -35,6 +36,39 @@ class CrearDicc (ContentHandler):
 
     def get_tags(self):
         return self.tags
+
+def log_fich(fichero,metodo,ip,puerto,linea):
+    print(fichero)
+    Log = open(fichero,'a')
+    formato = '%Y%m%d%H%M%S'
+    linea = linea.replace("\r\n", " ")
+    if metodo == "Envio":
+        Log.write(time.strftime(formato,time.gmtime()) + ' Sent to ' + ip + ":" + str(puerto) + ': ' +  linea + '\r\n')
+    elif metodo == "Recibo":
+        Log.write(time.strftime(formato,time.gmtime()) + ' Received from ' + ip + ":" + str(puerto) +
+                ': ' +  linea + '\r\n')
+    elif metodo == "Error":
+        Log.write(time.strftime(formato,time.gmtime()) + ' Error: ' +  linea + '\r\n')
+    elif metodo == "Otro":
+        #Para trazas mias
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+    elif metodo == "Empezar":
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+    elif metodo == "Final":
+        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+    Log.close()
+
+def Buscarpasswd(direc):
+    fichero = open(datapasswd)
+    Datos =  fichero.readlines()
+    for linea in Datos:
+        if linea != "" :
+                palabra = linea.split(" ")
+                if palabra[0] == direc :
+                    passwd = palabra[1]
+    return passwd
+
+
 
 parser = make_parser()
 chandler = CrearDicc()
@@ -64,7 +98,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
     Echo server class
     """
     dicserv = {}
-
+    diccnonce = {}
     def register2json(self):
         #Creamos fichero
 
@@ -129,29 +163,42 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     sms += ("WWW Authenticate: "+ "nonce= "+ str(aleatorio) + "\r\n")
                     self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
                     print("Enviamos al cliente: " + sms)
+                    self.diccnonce[direccion] = aleatorio
                 elif len(linea) == 7:
-                    sms = ("SIP/2.0 200 OK")
-                    self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
-                    print("Enviamos al cliente: " + sms)
-                    formato = '%Y-%m-%d %H:%M:%S'
-                    valor1 = int(valor) + int(time.time())
-                    tiempo = time.strftime(formato, time.gmtime(valor1))
-                    if valor == "0":
-                        del self.dicserv[direccion]
+                    contr = Buscarpasswd(direccion)
+                    contr = contr[:-1]
+                    Auto = linea[6].split("=")
+                    Autorizar = Auto[1]
+                    aletor = self.diccnonce[direccion]
+                    aleatoriob = (bytes(str(aletor),'utf-8'))
+                    contrb = (bytes(contr,'utf-8'))
+                    m = hashlib.md5()
+                    m.update(contrb + aleatoriob)
+                    respuesta = m.hexdigest()
+                    if respuesta == Autorizar :
+                        sms = ("SIP/2.0 200 OK")
+                        self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
+                        print("Enviamos al cliente: " + sms)
+                        formato = '%Y-%m-%d %H:%M:%S'
+                        valor1 = int(valor) + int(time.time())
+                        tiempo = time.strftime(formato, time.gmtime(valor1))
+                        if valor == "0":
+                            del self.dicserv[direccion]
+                        else:
+                            #USER = direccion.split(":")[1]
+                            self.dicserv[direccion] = [str(IP), puerto, tiempo, valor]
+                            #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
+                            lista = []
+                            for usuario in self.dicserv:
+                                nuevo = self.dicserv[usuario][2]
+                                if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
+                                    lista.append(usuario)
+                                    for cliente in lista:
+                                        del self.dicserv[cliente]
+                                    self.register2json()
                     else:
-                        #USER = direccion.split(":")[1]
-                        self.dicserv[direccion] = [str(IP), puerto, tiempo, valor]
-                        #self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
-                        lista = []
-                        for usuario in self.dicserv:
-                            nuevo = self.dicserv[usuario][2]
-                            if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
-                                lista.append(usuario)
-                                for cliente in lista:
-                                    del self.dicserv[cliente]
-                                self.register2json()
-
-
+                        sms = ("SIP/2.0 400 Bad Request")
+                        self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
             elif metodo == "INVITE":
                 #Sacamos a quien queremos enviar
                 dic = linea[1]
