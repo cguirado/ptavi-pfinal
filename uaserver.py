@@ -10,6 +10,7 @@ import os
 import os.path
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+import time
 # Creamos servidor de eco y escuchamos
 if len(sys.argv) != 2:
    sys.exit("Usage: python server.py config")
@@ -40,7 +41,6 @@ class CrearDicc (ContentHandler):
         return self.tags
 
 def log_fich(fichero,metodo,ip,puerto,linea):
-    print(fichero)
     Log = open(fichero,'a')
     formato = '%Y%m%d%H%M%S'
     linea = linea.replace("\r\n", " ")
@@ -100,6 +100,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 break
             print("El cliente nos manda " + lineb.decode('utf-8'))
             line = lineb.decode('utf-8')
+            log_fich(log,"Recibo",iproxy,portproxy,line)
             linea = line.split()
             metodo = linea[0]
             #(metodo, direccion, elresto) = line.split()
@@ -112,13 +113,15 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 mensaje += (ipserv + "\r\n" + "t=0" + "\r\n" )
                 mensaje += ("m = audio " + str(rtaudio) + " RTP \r\n")
                 self.wfile.write(bytes (mensaje,"utf-8"))
+                log_fich(log,"Envio",iproxy,portproxy,mensaje)
                 self.cliente['ip_client']= linea[8]
-                self.cliente['puerto_client'] = linea[13]
-                #print("AQUIIIII",self.cliente['puerto_client'])
+                self.cliente['puerto_client'] = linea[11]
             elif metodo == "BYE":
                 self.wfile.write(b"SIP/2.0 200 OK"+b"\r\n"+b"\r\n")
+                mensaje = ("SIP/2.0 200 OK"+"\r\n"+"\r\n")
+                log_fich(log,"Envio",iproxy,portproxy,mensaje)
             elif metodo == "ACK":
-                #print("Envio RTP")
+                mensaje= ("Envio RTP")
                 Ejecutar = "./mp32rtp -i " + self.cliente['ip_client'] + " -p "
                 Ejecutar += self.cliente['puerto_client'] + " < " + audio
                 os.system(Ejecutar)
@@ -126,15 +129,21 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             elif metodo not in ["INVITE", "BYE", "ACK"]:
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed" +
                                  b"\r\n"+b"\r\n")
+                error = ("SIP/2.0 405 Method Not Allowed" + "\r\n"+"\r\n")
+                log_fich(log,"Error",portproxy,portproxy,error)
             else:
                 self.wfile.write(b"SIP/2.0 400 Bad Request"+b"\r\n"+b"\r\n")
-            # Si no hay más líneas salimos del bucle infinito
+                error = ("SIP/2.0 400 Bad Request"+"\r\n"+"\r\n")
+                log_fich(log,"Error",ipserv,ports,error)
 
 
 if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
     if not os.path.exists (Config):
         sys.exit("Usage: python server.py IP port audio_file")
+        mensaje = ("Usage: python server.py IP port audio_file")
     serv = socketserver.UDPServer((ipserv, int(portserv)), EchoHandler)
-    print("Listening...")
+    msn = ("Listening...")
+    print(msn)
+    log_fich(log,"Empezar",ipserv,portserv,msn)
     serv.serve_forever()
