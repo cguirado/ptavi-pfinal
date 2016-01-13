@@ -149,7 +149,6 @@ try:
     #Si rebibo 7 cosas del Register  y la segunda que recibo es 401
     #debo enviar otra vez register
     reciv = Recibido.split()
-    print(reciv)
     if reciv[1] == "401":
         #Cuando me mandan un 401
         nonce = reciv[6]
@@ -166,7 +165,7 @@ try:
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         log_fich(log,"Envio",iproxy,portproxy,LINE)
         data = my_socket.recv(int(portproxy))
-    print('Recibido -- ', data.decode('utf-8'))
+        print('Recibido -- ', data.decode('utf-8'))
     Recibido = data.decode('utf-8')
     log_fich(log,"Recibo",iproxy,portproxy,Recibido)
     reciv = Recibido.split()
