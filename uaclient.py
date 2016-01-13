@@ -16,64 +16,66 @@ import time
 
 # Cliente UDP simple.
 
-
 #Comparar argumentos
 if len(sys.argv) != 4:
     mens1 = ("Usage: python client.py config method opcion")
-    log_fich(log,"Error",iproxy,portproxy,mens1)
+    log_fich(log, "Error", iproxy, portproxy, mens1)
     sys.exit(msn1)
 # Dirección IP del servidor.
 SERVER = 'localhost'
 Config = sys.argv[1]
 Metodo = sys.argv[2]
 Opcion = sys.argv[3]
-aleatorio = random.randint(100000000000000000000,999999999999999999999)
+aleatorio = random.randint(100000000000000000000, 999999999999999999999)
 #Extraer del XML
+
+
 class CrearDicc (ContentHandler):
     def __init__(self):
-         self.tags = []
-         self.dicc = {"account":['username','passwd'],
-                      "uaserver":['ip', 'puerto'],
-                      "rtpaudio":['puerto'],
-                      "regproxy":['ip','puerto'],
-                      "log":['path'],
-                      "audio":['path']}
+        self.tags = []
+        self.dicc = {"account": ['username', 'passwd'],
+                     "uaserver": ['ip', 'puerto'],
+                     "rtpaudio": ['puerto'],
+                     "regproxy": ['ip', 'puerto'],
+                     "log": ['path'],
+                     "audio": ['path']}
 
 #Metodo para coger los elemenos
     def startElement(self, name, attrs):
         if name in self.dicc:
-            dicc2={}
+            dicc2 = {}
             for atributo in self.dicc[name]:
                 #Guardar los atributos en mi diccionario
-                dicc2[atributo] = attrs.get(atributo,"")
+                dicc2[atributo] = attrs.get(atributo, "")
                 #Añadir sin borrar
-            self.tags.append([name,dicc2])
+            self.tags.append([name, dicc2])
 
     def get_tags(self):
         return self.tags
 
-#Log fu
 
-def log_fich(fichero,metodo,ip,puerto,linea):
-    Log = open(fichero,'a')
+def log_fich(fichero, metodo, ip, puerto, linea):
+    Log = open(fichero, 'a')
     formato = '%Y%m%d%H%M%S'
     linea = linea.replace("\r\n", " ")
     if metodo == "Envio":
-        Log.write(time.strftime(formato,time.gmtime()) + ' Sent to ' + ip + ":" + str(puerto) + ': ' +  linea + '\r\n')
+        Log.write(time.strftime(formato, time.gmtime()) + ' Sent to ' + ip +
+                  ":" + str(puerto) + ': ' + linea + '\r\n')
     elif metodo == "Recibo":
-        Log.write(time.strftime(formato,time.gmtime()) + ' Received from ' + ip + ":" + str(puerto) +
-                ': ' +  linea + '\r\n')
+        Log.write(time.strftime(formato, time.gmtime()) + ' Received from ' +
+                  ip + ":" + str(puerto) + ': ' + linea + '\r\n')
     elif metodo == "Error":
-        Log.write(time.strftime(formato,time.gmtime()) + ' Error: ' +  linea + '\r\n')
+        Log.write(time.strftime(formato, time.gmtime()) + ' Error: ' +
+                  linea + '\r\n')
     elif metodo == "Otro":
         #Para trazas mias
-        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+        Log.write(time.strftime(formato, time.gmtime()) + linea + '\r\n')
     elif metodo == "Empezar":
-        Log.write(time.strftime(formato,time.gmtime()) + "Starting..." + '\r\n')
+        Log.write(time.strftime(formato, time.gmtime()) + "Starting..." +
+                  '\r\n')
     elif metodo == "Final":
-        Log.write(time.strftime(formato,time.gmtime()) + "Finishing" + '\r\n')
+        Log.write(time.strftime(formato, time.gmtime()) + "Finishing" + '\r\n')
     Log.close()
-
 
 
 parser = make_parser()
@@ -103,7 +105,7 @@ try:
     if Metodo == "REGISTER":
         #REGISTER sip:leonard@bigbang.org:1234 SIP/2.0
         #Expires: 3600
-        LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0 \r\n" )
+        LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0\r\n")
         LINE += ("Expires: " + Opcion)
     if Metodo == "INVITE":
         """
@@ -118,7 +120,7 @@ try:
         LINE = ("INVITE sip:" + Opcion + " SIP/2.0" + "\r\n")
         LINE += ("Content-Type: application/sdp\r\n\r\n")
         LINE += ("v=0 \r\n")
-        LINE += ("o= " + username + " " + ipserv + "\r\n" )
+        LINE += ("o= " + username + " " + ipserv + "\r\n")
         LINE += ("t=0" + "\r\n")
         LINE += ("m=audio " + rtaudio + " RTP \r\n")
     if Metodo == "ACK":
@@ -128,71 +130,61 @@ try:
 
     if Metodo == "BYE":
         LINE = ("BYE sip:" + Opcion + " SIP/2.0" + "\r\n")
-
         """
         Creo que seria asi
         """
-    if Metodo not in ["INVITE", "BYE", "ACK","REGISTER"]:
+
+    if Metodo not in ["INVITE", "BYE", "ACK", "REGISTER"]:
         mens = ("SIP/2.0 Bad Request")
-        sys.exit(mens )
-        log_fich(log,"Error",iproxy,portproxy,mens)
+        sys.exit(mens)
+        log_fich(log, "Error", iproxy, portproxy, mens)
 
     print("Enviando: " + LINE)
-    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n' +b'\r\n')
-    log_fich(log,"Envio",iproxy,portproxy,LINE)
+    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n' + b'\r\n')
+    log_fich(log, "Envio", iproxy, portproxy, LINE)
     data = my_socket.recv(int(portproxy))
 
     print('Recibido -- ', data.decode('utf-8'))
     Recibido = data.decode('utf-8')
-    log_fich(log,"Recibo",iproxy,portproxy,Recibido)
-    #log_fich(log,"Recibo",iproxy,portproxy,Recibido)
+    log_fich(log, "Recibo", iproxy, portproxy, Recibido)
     #Si rebibo 7 cosas del Register  y la segunda que recibo es 401
     #debo enviar otra vez register
     reciv = Recibido.split()
     if reciv[1] == "401":
         #Cuando me mandan un 401
         nonce = reciv[6]
-        nonceb = (bytes(nonce,'utf-8'))
-        contraseñab = (bytes(contraseña,'utf-8'))
+        nonceb = (bytes(nonce, 'utf-8'))
+        contraseñab = (bytes(contraseña, 'utf-8'))
         m = hashlib.md5()
         m.update(contraseñab + nonceb)
         respuesta = m.hexdigest()
-        #print("Debo volver a enviar REGISTER + autori...")
-        LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0\r\n" )
+        LINE = ("REGISTER sip:" + username + ":" + portserv + " SIP/2.0\r\n")
         LINE += ("Expires: " + Opcion + "\r\n")
         LINE += ("Autorization: response=" + str(respuesta))
         print("Enviando: " + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-        log_fich(log,"Envio",iproxy,portproxy,LINE)
+        log_fich(log, "Envio", iproxy, portproxy, LINE)
         data = my_socket.recv(int(portproxy))
         print('Recibido -- ', data.decode('utf-8'))
     Recibido = data.decode('utf-8')
-    log_fich(log,"Recibo",iproxy,portproxy,Recibido)
+    log_fich(log, "Recibo", iproxy, portproxy, Recibido)
     reciv = Recibido.split()
-    if reciv[1] == "100" and reciv[4]=="180" and reciv[7] == "200":
+    if reciv[1] == "100" and reciv[4] == "180" and reciv[7] == "200":
         #Saco ip y puerto del servidor
             ip_serv = reciv[14]
             puerto_serv = reciv[19]
-            #print("Contestar ACK", Recibido)
-            LINE = ("ACK sip:" + Opcion + " SIP/2.0 \r\n" )
+            LINE = ("ACK sip:" + Opcion + " SIP/2.0 \r\n")
             print("Enviando: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-            log_fich(log,"Envio",iproxy,portproxy,LINE)
+            log_fich(log, "Envio", iproxy, portproxy, LINE)
             Ejecutar = "./mp32rtp -i " + ipserv + " -p "
             Ejecutar += puerto_serv + " < " + audio
             os.system(Ejecutar)
 
-    """
-    # Escuhchar el RTP
-    print("Escuchamos el RTP ")
-    cvlc rtp://@:rtpaudio> /dev/null
-    """
     print("Terminando socket...")
      # Cerramos todo
     my_socket.close()
     sm = ("Fin.")
-    log_fich(log,"Final",ipserv,portserv,sm)
+    log_fich(log, "Final", ipserv, portserv, sm)
 except socket.error:
-    mal = ("Error: No server listening at ", iproxy, "port ", portproxy)
-    #log_fich(log,"Error",iproxy,portproxy,mal)
     print("Error: No server listening at ", iproxy, "port ", portproxy)
