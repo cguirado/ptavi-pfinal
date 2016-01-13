@@ -197,7 +197,8 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                             lista = []
                             for usuario in self.dicserv:
                                 nuevo = self.dicserv[usuario][2]
-                                if time.strptime(nuevo, formato) <= time.gmtime(time.time()):
+                                hor = time.gmtime(time.time())
+                                if time.strptime(nuevo, formato) <= hor:
                                     lista.append(usuario)
                                     for cliente in lista:
                                         del self.dicserv[cliente]
