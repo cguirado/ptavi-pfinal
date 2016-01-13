@@ -269,7 +269,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 Part_Recb = Recibido.split()
                 #print("Volvemos a enviar al cliente la contestacion del serv")
                 self.wfile.write(bytes(Recibido, 'utf-8') + b"\r\n" + b"\r\n")
-                
+
             elif metodo not in ["REGISTER", "INVITE", "BYE", "ACK"]:
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed" +
                                  b"\r\n" + b"\r\n")
