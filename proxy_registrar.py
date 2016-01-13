@@ -14,8 +14,9 @@ from xml.sax.handler import ContentHandler
 import hashlib
 #Comparar argumentos
 if len(sys.argv) != 2:
-    sys.exit("Usage: python proxy_registrar.py config")
-
+    error = ("Usage: python proxy_registrar.py config")
+    log_fich(log,"Error",uaip,uapuerto,error)
+    sys.exit(error)
 #Extraemos del xml
 class CrearDicc (ContentHandler):
     def __init__(self):
@@ -38,7 +39,6 @@ class CrearDicc (ContentHandler):
         return self.tags
 
 def log_fich(fichero,metodo,ip,puerto,linea):
-    print(fichero)
     Log = open(fichero,'a')
     formato = '%Y%m%d%H%M%S'
     linea = linea.replace("\r\n", " ")
@@ -49,12 +49,12 @@ def log_fich(fichero,metodo,ip,puerto,linea):
                 ': ' +  linea + '\r\n')
     elif metodo == "Error":
         Log.write(time.strftime(formato,time.gmtime()) + ' Error: ' +  linea + '\r\n')
-    elif metodo == "Otro":
-        #Para trazas mias
-        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
     elif metodo == "Empezar":
-        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+        Log.write(time.strftime(formato,time.gmtime()) + "Starting..." + '\r\n')
     elif metodo == "Final":
+        Log.write(time.strftime(formato,time.gmtime()) + "Finishing"+ '\r\n')
+    else:
+        #Para trazas mias
         Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
     Log.close()
 
@@ -143,6 +143,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             lineb = self.rfile.read()
             print("El cliente nos manda " + lineb.decode('utf-8'))
             line = lineb.decode('utf-8')
+            log_fich(log,"Recibo",IP,PORT,line)
             linea = line.split()
 
             if not linea:  # Si no hay más líneas salimos del bucle infinito
@@ -163,6 +164,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     sms += ("WWW Authenticate: "+ "nonce= "+ str(aleatorio) + "\r\n")
                     self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
                     print("Enviamos al cliente: " + sms)
+                    log_fich(log,"Envio",IP,PORT,sms)
                     self.diccnonce[direccion] = aleatorio
                 elif len(linea) == 7:
                     contr = Buscarpasswd(direccion)
@@ -179,6 +181,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                         sms = ("SIP/2.0 200 OK")
                         self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
                         print("Enviamos al cliente: " + sms)
+                        log_fich(log,"Envio",IP,PORT,sms)
                         formato = '%Y-%m-%d %H:%M:%S'
                         valor1 = int(valor) + int(time.time())
                         tiempo = time.strftime(formato, time.gmtime(valor1))
@@ -195,15 +198,16 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                                     lista.append(usuario)
                                     for cliente in lista:
                                         del self.dicserv[cliente]
-                                    self.register2json()
+                            self.register2json()
                     else:
                         sms = ("SIP/2.0 400 Bad Request")
                         self.wfile.write(bytes (sms,'utf-8') +b"\r\n"+b"\r\n")
+                        log_fich(log,"Error",uaip,uapuerto,sms)
             elif metodo == "INVITE":
                 #Sacamos a quien queremos enviar
                 dic = linea[1]
                 direc = dic.split(":")[1]
-                puerto = linea[13]
+                puerto = linea[11]
                 if direc in self.dicserv:
                     uaip = self.dicserv[direc][0]
                     uapuerto = self.dicserv[direc][1]
@@ -217,27 +221,27 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     #print("Esperamos que nos llegue algo?")
                     data = my_socket.recv(int(uapuerto))
                     print('Recibido -- ', data.decode('utf-8'))
+                    log_fich(log,"Recibo",uaip,uapuerto,line)
                     Recibido = data.decode('utf-8')
                     Part_Recb = Recibido.split()
-                    #print("Volvemos a enviar al cliente la contestacion del serv")
+                    log_fich(log,"Envio",uaip,uapuerto,Recibido)
                     self.wfile.write(bytes (Recibido,'utf-8') +b"\r\n"+b"\r\n")
 
                 else:
                     mensaje = ("SIP/2.0 404 User Not Found")
+                    log_fich(log,"Error",ip,puerto,mensaje)
                     self.wfile.write(bytes (mensaje,'utf-8') +b"\r\n"+b"\r\n")
 
             elif metodo == "ACK":
-                print("Comienza ack")
                 dic = linea[1]
                 direc = dic.split(":")[1]
                 uaip = self.dicserv[direc][0]
                 uapuerto = self.dicserv[direc][1]
-                print("Dentro del ACK: ", uapuerto,uaip )
                 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((uaip, int(uapuerto)))
-                #print("Mandamos el ACK al servidor")
+                log_fich(log,"Envio",uaip,uapuerto,line)
                 my_socket.send(bytes(line, 'utf-8') + b'\r\n')
 
             elif metodo == "BYE":
@@ -249,6 +253,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((uaip, int(uapuerto)))
+                log_fich(log,"Envio",uaip,uapuerto,line)
                 my_socket.send(bytes(line, 'utf-8') + b'\r\n')
                 data = my_socket.recv(int(uapuerto))
                 print('Recibido -- ', data.decode('utf-8'))
@@ -260,9 +265,12 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             elif metodo not in ["REGISTER","INVITE", "BYE", "ACK"]:
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed" +
                                  b"\r\n"+b"\r\n")
+                error = ("SIP/2.0 405 Method Not Allowed")
+                log_fich(log,"Error",ip,puerto,error)
             else:
                 self.wfile.write(b"SIP/2.0 400 Bad Request"+b"\r\n"+b"\r\n")
-
+                error = ("SIP/2.0 400 Bad Request")
+                log_fich(log,"Error",ip,puerto,error)
 
 
 
@@ -270,5 +278,7 @@ if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
     PORT = int(puerto)
     serv = socketserver.UDPServer(('', PORT), EchoHandler)
-    print("Lanzando servidor UDP de eco...")
+    p = ("Empezar...")
+    print("Starting...")
+    log_fich(log,"Empezar",'',PORT,p)
     serv.serve_forever()
