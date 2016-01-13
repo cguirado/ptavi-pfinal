@@ -19,7 +19,9 @@ import time
 
 #Comparar argumentos
 if len(sys.argv) != 4:
-    sys.exit("Usage: python client.py config method opcion")
+    mens1 = ("Usage: python client.py config method opcion")
+    log_fich(log,"Error",iproxy,portproxy,mens1)
+    sys.exit(msn1)
 # Dirección IP del servidor.
 SERVER = 'localhost'
 Config = sys.argv[1]
@@ -53,7 +55,6 @@ class CrearDicc (ContentHandler):
 #Log fu
 
 def log_fich(fichero,metodo,ip,puerto,linea):
-    print(fichero)
     Log = open(fichero,'a')
     formato = '%Y%m%d%H%M%S'
     linea = linea.replace("\r\n", " ")
@@ -68,9 +69,9 @@ def log_fich(fichero,metodo,ip,puerto,linea):
         #Para trazas mias
         Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
     elif metodo == "Empezar":
-        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+        Log.write(time.strftime(formato,time.gmtime()) + "Starting..." + '\r\n')
     elif metodo == "Final":
-        Log.write(time.strftime(formato,time.gmtime()) + linea + '\r\n')
+        Log.write(time.strftime(formato,time.gmtime()) + "Finishing" + '\r\n')
     Log.close()
 
 
@@ -115,11 +116,11 @@ try:
     m=audio 34543 RTP
         """
         LINE = ("INVITE sip:" + Opcion + " SIP/2.0" + "\r\n")
-        LINE += ("Content-Type: application/sdp \r\n\r\n ")
+        LINE += ("Content-Type: application/sdp\r\n\r\n")
         LINE += ("v=0 \r\n")
         LINE += ("o= " + username + " " + ipserv + "\r\n" )
         LINE += ("t=0" + "\r\n")
-        LINE += ("m = audio " + rtaudio + " RTP \r\n")
+        LINE += ("m=audio " + rtaudio + " RTP \r\n")
     if Metodo == "ACK":
         #No estoy segura de esto
         LINE = "ACK sip: " + Opcion + "SIP/2.0"
@@ -148,6 +149,7 @@ try:
     #Si rebibo 7 cosas del Register  y la segunda que recibo es 401
     #debo enviar otra vez register
     reciv = Recibido.split()
+    print(reciv)
     if reciv[1] == "401":
         #Cuando me mandan un 401
         nonce = reciv[6]
@@ -163,7 +165,6 @@ try:
         print("Enviando: " + LINE)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         log_fich(log,"Envio",iproxy,portproxy,LINE)
-        #log_fich(log,"Envio",iproxy,portproxy,LINE)
         data = my_socket.recv(int(portproxy))
     print('Recibido -- ', data.decode('utf-8'))
     Recibido = data.decode('utf-8')
@@ -178,12 +179,10 @@ try:
             print("Enviando: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
             log_fich(log,"Envio",iproxy,portproxy,LINE)
-            #log_fich(log,"Envio",iproxy,portproxy,LINE)
-            #print("Envio RTP", ip_serv,puerto_serv)
             Ejecutar = "./mp32rtp -i " + ipserv + " -p "
             Ejecutar += puerto_serv + " < " + audio
             os.system(Ejecutar)
-            print("Termina RTP")
+
     """
     # Escuhchar el RTP
     print("Escuchamos el RTP ")
@@ -192,8 +191,9 @@ try:
     print("Terminando socket...")
      # Cerramos todo
     my_socket.close()
-    print("Fin.")
+    sm = ("Fin.")
+    log_fich(log,"Final",ipserv,portserv,sm)
 except socket.error:
-    #log_fich(log,"Eror",iproxy,portproxy,mal)
-    #mal = ("Error: No server listening at ", iproxy, "port ", portproxy)
+    mal = ("Error: No server listening at ", iproxy, "port ", portproxy)
+    #log_fich(log,"Error",iproxy,portproxy,mal)
     print("Error: No server listening at ", iproxy, "port ", portproxy)
