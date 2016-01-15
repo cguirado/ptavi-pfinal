@@ -163,16 +163,16 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                                            999999999999999999999)
                 if len(linea) == 5:
                     sms = ("SIP/2.0 401 Unauthorized"+"\r\n")
-                    sms += ("WWW Authenticate: " + "nonce= " + str(aleatorio) +
-                            "\r\n")
+                    sms += ("WWW Authenticate: Digest " + "nonce= " +
+                            str(aleatorio) + "\r\n")
                     self.wfile.write(bytes(sms, 'utf-8') + b"\r\n" + b"\r\n")
                     print("Enviamos al cliente: " + sms)
                     log_fich(log, "Envio", IP, PORT, sms)
                     self.diccnonce[direccion] = aleatorio
-                elif len(linea) == 7:
+                elif len(linea) == 8:
                     contr = Buscarpasswd(direccion)
                     contr = contr[:-1]
-                    Auto = linea[6].split("=")
+                    Auto = linea[7].split("=")
                     Autorizar = Auto[1]
                     aletor = self.diccnonce[direccion]
                     aleatoriob = (bytes(str(aletor), 'utf-8'))
